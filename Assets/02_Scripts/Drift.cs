@@ -1,16 +1,20 @@
-using UnityEngine;
+ï»¿using UnityEngine;
+using System.Collections;
 
 public class Drift : MonoBehaviour
 {
-    [SerializeField] float accleration = 20.0f;         // ÀüÁø / ÈÄÁø °¡¼Óµµ
-    [SerializeField] float steering = 3.0f;               // Á¶Ç× ¼Óµµ
+    [SerializeField] float accleration = 80.0f;         // ì „ì§„ / í›„ì§„ ê°€ì†ë„
+    [SerializeField] float steering = 3.0f;               // ì¡°í•­ ì†ë„
     [SerializeField] float maxSpeed = 30.0f;
-    [SerializeField] float driftFactor = 0.95f;         // ³·À» ¼ö·Ï ´õ ¹Ì²ô·¯Áü
+    [SerializeField] float driftFactor = 0.95f;         // ë‚®ì„ ìˆ˜ë¡ ë” ë¯¸ë„ëŸ¬ì§
+
+    private float currentAccel = 0f;
+    public float accelRate = 10f; // ê°€ì† ì¦ê°€ ì†ë„
 
     [SerializeField] float slowAccleraionRatio = 0.5f;
     [SerializeField] float boostAccleraionRatio = 1.5f;
 
-    // ÀÌÆåÆ®
+    // ì´í™íŠ¸
     [SerializeField] ParticleSystem smokeLeft;
     [SerializeField] ParticleSystem smokeRight;
     [SerializeField] TrailRenderer leftTrail;
@@ -35,10 +39,31 @@ public class Drift : MonoBehaviour
     } 
     void FixedUpdate()
     {
+        float verticalInput = Input.GetAxis("Vertical");
         float speed = Vector2.Dot(rb.linearVelocity, transform.up);
-        if (speed < maxSpeed)
+
+        // ğŸ”¥ ë’·ë°©í–¥í‚¤ ëˆ„ë¥´ë©´ íƒ! ê°ì†
+        if (verticalInput < 0)
         {
-            rb.AddForce(transform.up * Input.GetAxis("Vertical") * accleration);
+            // ì†ë„ë¥¼ í™• ì¤„ì„ (ê°ì† ë¹„ìœ¨ ì¡°ì • ê°€ëŠ¥)
+            rb.linearVelocity *= 0.9f;
+
+            // ë°”ë¡œ í›„ì§„ í˜ì„ ì£¼ê³  ì‹¶ìœ¼ë©´ ì•„ë˜ë„ ê°™ì´ ì‚¬ìš©
+            currentAccel = Mathf.MoveTowards(currentAccel, -accleration, accelRate * Time.fixedDeltaTime);
+        }
+        else if (verticalInput > 0)
+        {
+            // ì „ì§„ì€ ë¶€ë“œëŸ½ê²Œ
+            currentAccel = Mathf.MoveTowards(currentAccel, accleration, accelRate * Time.fixedDeltaTime);
+        }
+        else
+        {
+            currentAccel = Mathf.MoveTowards(currentAccel, 0, accelRate * Time.fixedDeltaTime);
+        }
+
+        if (Mathf.Abs(speed) < maxSpeed)
+        {
+            rb.AddForce(transform.up * currentAccel);
         }
 
         float turnAmount = Input.GetAxis("Horizontal") * steering * Mathf.Clamp(speed / maxSpeed, 0.4f, 1.0f);
@@ -77,7 +102,7 @@ public class Drift : MonoBehaviour
             if (other.gameObject.CompareTag("Boost"))
             {
                 accleration = boostAccleration;
-                Debug.Log("¼Óµµ »ó½Â!");
+                Debug.Log("ì†ë„ ìƒìŠ¹!");
                 Destroy(other.gameObject);
 
                 Invoke(nameof(ResetAccleration), 5f);
@@ -91,8 +116,9 @@ public class Drift : MonoBehaviour
         void OnCollisionEnter2D(Collision2D collision)
         {
             accleration = slowAccleration;
-            Debug.Log("¼Óµµ °¨¼Ò");
+            Debug.Log("ì†ë„ ê°ì†Œ");
             Invoke(nameof(ResetAccleration), 3f);
         }
+
     }
 }
