@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+﻿using JetBrains.Annotations;
+using UnityEngine;
 
 public class Drift : MonoBehaviour
 {
     public float accleration = 60.0f;         // 전진 / 후진 가속도
     public float steering = 5.0f;               // 조항 속도
-    public float maxSpeed = 30.0f;
+    public float maxSpeed = 20.0f;
     public float driftFactor = 0.95f;         // 낮을 수록 더 미끄러짐
 
     private float currentAccel = 0f;
@@ -13,35 +14,51 @@ public class Drift : MonoBehaviour
     public float slowAccleraionRatio = 0.5f;
     public float boostAccleraionRatio = 1.5f;
 
+    // 부스터
+    public float boostDuration = 4.0f;
+    public float boostMultiplier = 3.0f;
+
+    private bool isBoosting = false;
+    int boosterCount = 0;
+
     // 이펙트
     public ParticleSystem smokeLeft;
     public ParticleSystem smokeRight;
+    public Transform boostImage1;
+    public Transform boostImage2;
     public TrailRenderer leftTrail;
     public TrailRenderer rightTrail;
 
+
     Rigidbody2D rb;
-    AudioSource audioSource;
+    public AudioSource driftSound;
+    public AudioSource boostSound;
 
     float defaultAccleration;
     float slowAccleration;
     float boostAccleration;
 
-    public int boosterCount = 0;
+    // 드리프트 부스터 관련
+    float driftTimer = 0f;
+    float driftThreshold = 2f;
+    bool isDrifting = false;
 
-    private float driftTimer = 0f;
-    private float driftThreshold = 2f;
-    private bool boostGiven = false;
+    // 짜투리 변수
+    int i,j;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        audioSource = rb.GetComponent<AudioSource>();
-        
 
         defaultAccleration = accleration;
         slowAccleration = accleration * slowAccleration;
         boostAccleration *= boostAccleration;
 
+        boostImage1.gameObject.SetActive(false);
+        boostImage2.gameObject.SetActive(false);
+
+        smokeLeft.Stop();
+        smokeRight.Stop();
     }
     void FixedUpdate()
     {
@@ -83,65 +100,79 @@ public class Drift : MonoBehaviour
     void Update()
     {
         float sidewayVelocity = Vector2.Dot(rb.linearVelocity, transform.right);
+        isDrifting = rb.linearVelocity.magnitude > 10.0f && Mathf.Abs(sidewayVelocity) > 3.0f;
 
-        bool isDriftting = rb.linearVelocity.magnitude > 2.0f && Mathf.Abs(sidewayVelocity) > 2.0f;
-        if (isDriftting)
+        // 드리프트 중일 때
+        if (isDrifting)
         {
-            driftTimer += Time.deltaTime;
+            driftTimer += Time.deltaTime; //병신임??
 
-            if (boosterCount < 2)
+            // 드리프트 시간이 2초 이상이고, 부스터 개수가 2개 미만일떄
+            if (driftTimer >= driftThreshold && boosterCount < 2)
             {
-                if (driftTimer >= driftThreshold && !boostGiven)
-                {
-                    boosterCount++;
-                    boostGiven = true;
-                    driftTimer = 0f;
-                    GameMgr.Instance.UpdateDriftGauge(0f); // 리셋
-                    Debug.Log($" 부스터 획득! 현재: {boosterCount}");
-                }
-                else
-                {
-                    GameMgr.Instance.UpdateDriftGauge(driftTimer);
-                }
+                boosterCount++;
+                driftTimer = 0f; // 2초 넘으면 리셋 (다시 모으려면 새로)
+                Debug.Log($"🔥 부스터 충전! 현재: {boosterCount}");
+                GameMgr.Instance.UpdateBoosterUI(boosterCount); // UI 줄이기
             }
-            else
-            {
-                // 부스터 2개 찼으면: 게이지는 2초까지만 보여주고 그 이상이면 0
-                if (driftTimer < driftThreshold)
-                    GameMgr.Instance.UpdateDriftGauge(driftTimer);
-                else
-                    GameMgr.Instance.UpdateDriftGauge(0f);
-            }
+            GameMgr.Instance.UpdateDriftGauge(driftTimer);
 
-
-            if (!audioSource.isPlaying) audioSource.Play();
+            if (!driftSound.isPlaying) driftSound.Play();
             if (!smokeLeft.isPlaying) smokeLeft.Play();
             if (!smokeRight.isPlaying) smokeRight.Play();
         }
         else
         {
-            if (audioSource.isPlaying) audioSource.Stop();
+            if (driftTimer < driftThreshold)
+                GameMgr.Instance.UpdateDriftGauge(driftTimer);
+            else
+            {
+                driftTimer = 0f;
+                GameMgr.Instance.UpdateDriftGauge(0f);
+            }
+            if (driftSound.isPlaying) driftSound.Stop();
             if (smokeLeft.isPlaying) smokeLeft.Stop();
             if (smokeRight.isPlaying) smokeRight.Stop();
         }
+      
+        leftTrail.emitting = isDrifting;
+        rightTrail.emitting = isDrifting;
 
-        leftTrail.emitting = isDriftting;
-        rightTrail.emitting = isDriftting;
+        if (Input.GetKeyDown(KeyCode.LeftControl)) // 혹은 UI 버튼이든
+        {
+            UseBooster();
+        }
 
-        float dot = Vector2.Dot(transform.up, rb.linearVelocity.normalized);
-
-        bool isWrongWay = dot < -0.5f && rb.linearVelocity.magnitude > 2f;
-
-        GameMgr.Instance.ShowWrongWay(isWrongWay);
+        // float dot = Vector2.Dot(transform.up, rb.linearVelocity.normalized);
+        // bool isWrongWay = dot < -0.5f && rb.linearVelocity.magnitude > 2f;
+        // GameMgr.Instance.ShowWrongWay(isWrongWay);
 
     }
     void OnTriggerEnter2D(Collider2D other)
     {
+
         if (other.CompareTag("StartLine"))
+        {
+            i++;
+            Debug.Log("i : "+ i);
+        }   
+        if (other.CompareTag("Middle"))
+        {
+            j++;
+            Debug.Log("j : " + j);
+        }
+
+        if(i==2&&j==1)
         {
             GameMgr.Instance.LabCount++;
             Debug.Log("랩 증가: " + GameMgr.Instance.LabCount);
         }
+        if(i==3&&j==2)
+        {
+            GameMgr.Instance.LabCount++;
+            Debug.Log("랩 증가: " + GameMgr.Instance.LabCount);
+        }
+
 
         if (other.gameObject.CompareTag("Boost"))
         {
@@ -163,5 +194,40 @@ public class Drift : MonoBehaviour
         rb.linearVelocity *= 0.3f;
         Debug.Log("속도 감소");
         Invoke(nameof(ResetAccleration), 3f);
+    }
+
+    void UseBooster()
+    {
+        if (boosterCount <= 0 || isBoosting) return;
+
+        boosterCount--;
+        isBoosting = true;
+        maxSpeed = 40f;
+        accleration *= boostMultiplier;
+
+        // 부스터 효과
+        GameMgr.Instance.UpdateBoosterUI(boosterCount); // UI 줄이기
+        PlayBoosterEffect(); // 이펙트 처리 (파티클, 사운드 등)
+
+        Invoke(nameof(EndBoost), boostDuration);
+        Invoke(nameof(EndBoosterEffect), boostDuration);
+    }
+    void EndBoost()
+    {
+        accleration = defaultAccleration;
+        maxSpeed = 20f;
+        isBoosting = false;
+    }
+    void PlayBoosterEffect()
+    {
+        boostSound.Play();
+        boostImage1.gameObject.SetActive(true);
+        boostImage2.gameObject.SetActive(true);
+    }
+    void EndBoosterEffect()
+    {
+        boostSound.Stop();
+        boostImage1.gameObject.SetActive(false);
+        boostImage2.gameObject.SetActive(false);
     }
 }
