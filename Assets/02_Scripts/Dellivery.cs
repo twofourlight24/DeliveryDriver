@@ -12,7 +12,6 @@ public class Dellivery : MonoBehaviour
     private void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        Debug.Log(spriteRenderer);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
