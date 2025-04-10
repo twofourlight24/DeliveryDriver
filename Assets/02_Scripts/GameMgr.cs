@@ -165,6 +165,7 @@ public class GameMgr : MonoBehaviour
     void ReStart_Btn_Click()
     {
         ResetGameState();
+        Debug.Log("dd");
         SceneManager.LoadScene("SampleScene");
     }
 

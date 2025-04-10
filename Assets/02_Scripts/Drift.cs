@@ -43,8 +43,12 @@ public class Drift : MonoBehaviour
     float driftThreshold = 2f;
     bool isDrifting = false;
 
-    // 짜투리 변수
-    int i,j;
+    // Lab 체크 변수
+    bool passedMiddle = false;
+
+    //뺑뺑이 체크
+    public GameObject Gate;
+    bool passGate = false;
 
     void Start()
     {
@@ -67,13 +71,13 @@ public class Drift : MonoBehaviour
         if (verticalInput > 0)
             currentAccel = Mathf.MoveTowards(currentAccel, accleration, accelRate * Time.fixedDeltaTime);
         else if (verticalInput < 0)
-            currentAccel = Mathf.MoveTowards(currentAccel, -accleration * 5, accelRate * 1.5f * Time.fixedDeltaTime);
+            currentAccel = Mathf.MoveTowards(currentAccel, -accleration, accelRate  * Time.fixedDeltaTime);
         else
             currentAccel = Mathf.MoveTowards(currentAccel, 0, accelRate * Time.fixedDeltaTime);
 
         if (Input.GetAxis("Vertical") == 0)
         {
-            rb.linearVelocity *= 0.9f; // 관성 줄이기 - 1에 가까울수록 감속이 느림
+            rb.linearVelocity *= 0.7f; // 관성 줄이기 - 1에 가까울수록 감속이 느림
         }
 
         float speed = Vector2.Dot(rb.linearVelocity, transform.up);
@@ -105,7 +109,7 @@ public class Drift : MonoBehaviour
         // 드리프트 중일 때
         if (isDrifting)
         {
-            driftTimer += Time.deltaTime; //병신임??
+            driftTimer += Time.deltaTime;
 
             // 드리프트 시간이 2초 이상이고, 부스터 개수가 2개 미만일떄
             if (driftTimer >= driftThreshold && boosterCount < 2)
@@ -143,34 +147,35 @@ public class Drift : MonoBehaviour
             UseBooster();
         }
 
-        // float dot = Vector2.Dot(transform.up, rb.linearVelocity.normalized);
-        // bool isWrongWay = dot < -0.5f && rb.linearVelocity.magnitude > 2f;
-        // GameMgr.Instance.ShowWrongWay(isWrongWay);
-
     }
     void OnTriggerEnter2D(Collider2D other)
     {
-
-        if (other.CompareTag("StartLine"))
-        {
-            i++;
-            Debug.Log("i : "+ i);
-        }   
         if (other.CompareTag("Middle"))
         {
-            j++;
-            Debug.Log("j : " + j);
+            passedMiddle = true;
+            Debug.Log("중간지점 통과");
         }
+        if (other.CompareTag("StartLine") && passedMiddle)
+        {
+            GameMgr.Instance.LabCount++;
+            Debug.Log(" 랩 증가: " + GameMgr.Instance.LabCount);
 
-        if(i==2&&j==1)
-        {
-            GameMgr.Instance.LabCount++;
-            Debug.Log("랩 증가: " + GameMgr.Instance.LabCount);
+            passedMiddle = false; // 다음 랩 위해 초기화
         }
-        if(i==3&&j==2)
+        if (other.CompareTag("Check"))
         {
-            GameMgr.Instance.LabCount++;
-            Debug.Log("랩 증가: " + GameMgr.Instance.LabCount);
+            passGate = true;
+            Debug.Log("뺑뺑이 통과");
+        }
+        if(passGate)
+        {
+            Gate.gameObject.SetActive(false);
+            passGate = false;
+            Debug.Log("dd");
+        }
+        else
+        {
+            Gate.gameObject.SetActive(true);
         }
 
 
@@ -190,10 +195,31 @@ public class Drift : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        accleration = defaultAccleration * slowAccleraionRatio;
-        rb.linearVelocity *= 0.3f;
-        Debug.Log("속도 감소");
-        Invoke(nameof(ResetAccleration), 3f);
+        // 충돌한 면의 법선 벡터
+        Vector2 collisionNormal = collision.contacts[0].normal;
+
+        // 내 앞 방향
+        Vector2 forward = transform.up;
+
+        // 얼마나 정면으로 박았는지 (1에 가까울수록 정면)
+        float impact = Vector2.Dot(-collisionNormal, forward);
+
+        // 정면 충돌로 간주되는 기준값 (0.8 이상이면 거의 정면)
+        if (impact > 0.8f)
+        {
+            // 전진속도만 날리고 측면은 살림
+            Vector2 sideVelocity = transform.right * Vector2.Dot(rb.linearVelocity, transform.right);
+            rb.linearVelocity = sideVelocity * 0.3f;
+
+            accleration = defaultAccleration * slowAccleraionRatio;
+            Debug.Log(" 정면 충돌! 전진 속도 제거");
+            Invoke(nameof(ResetAccleration), 3f);
+        }
+        else
+        {
+            Debug.Log("측면 긁힘 → 속도 유지");
+            // 필요하면 여기서 가벼운 마찰만 주는 것도 가능
+        }
     }
 
     void UseBooster()

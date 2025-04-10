@@ -9,6 +9,7 @@ TagManager:
   - Boost
   - StartLine
   - Middle
+  - Check
   layers:
   - Default
   - TransparentFX
