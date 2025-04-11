@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -33,6 +34,10 @@ public class GameMgr : MonoBehaviour
     private float GlovalTime = 0f;
     private static float GlovalBestTime = Mathf.Infinity;
 
+    // 카운트다운 관련 변수
+    public Text countdownText;
+    public AudioSource CountDonwSound;
+
     public void UpdateDriftGauge(float time)
     {
         driftGaugeImage.fillAmount = Mathf.Clamp01(time / 2f); // 0~2초 기준
@@ -41,7 +46,11 @@ public class GameMgr : MonoBehaviour
     public void Awake()
     {
         Instance = this;
-        Time.timeScale = 1.0f;
+
+        if (CountDonwSound.isPlaying)
+            CountDonwSound.Stop();
+
+        StartCoroutine(CountdownRoutine());
         LabCount = 1;
     }
 
@@ -65,7 +74,7 @@ public class GameMgr : MonoBehaviour
             UpdateTimerDisplay(currentTime);
         }
 
-        Lab_text.text = string.Format("LAB "+LabCount+"/2");
+        Lab_text.text = string.Format("LAB " + LabCount + "/2");
     }
 
     public void StartTimer()
@@ -92,7 +101,7 @@ public class GameMgr : MonoBehaviour
         if (LabCount == 2 && bestLapTime == Mathf.Infinity)
         {
             float lapTime = Time.time - LastLapTime;
-            LastLapTime = Time.time; 
+            LastLapTime = Time.time;
 
             if (lapTime < bestLapTime)
             {
@@ -122,7 +131,7 @@ public class GameMgr : MonoBehaviour
         {
             if (i < count)
             {
-               BoosterImage[i].gameObject.SetActive(true);
+                BoosterImage[i].gameObject.SetActive(true);
             }
             else
             {
@@ -177,5 +186,30 @@ public class GameMgr : MonoBehaviour
 #else
     Application.Quit();
 #endif
+    }
+
+    IEnumerator CountdownRoutine()
+    {
+        Time.timeScale = 0f;
+
+        string[] countdown = { "Ready", "3", "2", "1", "Start!" };
+        for (int i = 0; i < countdown.Length; i++)
+        {
+            countdownText.text = countdown[i];
+            countdownText.gameObject.SetActive(true);
+            if (i == 1)
+            {
+                CountDonwSound.Play();
+            }
+            yield return new WaitForSecondsRealtime(1f);
+        }
+
+
+
+        countdownText.gameObject.SetActive(false);
+
+        Time.timeScale = 1f;
+
+
     }
 }

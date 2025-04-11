@@ -191,6 +191,7 @@ public class Drift : MonoBehaviour
     void ResetAccleration()
     {
         accleration = defaultAccleration;
+        maxSpeed = 20f;
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -211,9 +212,11 @@ public class Drift : MonoBehaviour
             Vector2 sideVelocity = transform.right * Vector2.Dot(rb.linearVelocity, transform.right);
             rb.linearVelocity = sideVelocity * 0.3f;
 
-            accleration = defaultAccleration * slowAccleraionRatio;
+            currentAccel = 0f;
+            accleration = 0f;
+            maxSpeed = 0f;
             Debug.Log(" 정면 충돌! 전진 속도 제거");
-            Invoke(nameof(ResetAccleration), 3f);
+            Invoke(nameof(ResetAccleration), 0.5f);
         }
         else
         {
