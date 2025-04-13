@@ -180,12 +180,7 @@ public class GameMgr : MonoBehaviour
 
     void Exit_Btn_Click()
     {
-        Application.Quit();
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-    Application.Quit();
-#endif
+        SceneManager.LoadScene("TitleScene");
     }
 
     IEnumerator CountdownRoutine()

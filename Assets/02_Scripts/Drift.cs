@@ -5,8 +5,8 @@ public class Drift : MonoBehaviour
 {
     public float accleration = 60.0f;         // 전진 / 후진 가속도
     public float steering = 5.0f;               // 조항 속도
-    public float maxSpeed = 20.0f;
-    public float driftFactor = 0.95f;         // 낮을 수록 더 미끄러짐
+    public float maxSpeed = 30.0f;
+    public float driftFactor = 0.8f;         // 낮을 수록 더 미끄러짐
 
     private float currentAccel = 0f;
     public float accelRate = 30f; // 가속 증가 속도
@@ -176,16 +176,6 @@ public class Drift : MonoBehaviour
         else
         {
             Gate.gameObject.SetActive(true);
-        }
-
-
-        if (other.gameObject.CompareTag("Boost"))
-        {
-            accleration = boostAccleration;
-            Debug.Log("속도 상승!");
-            Destroy(other.gameObject);
-
-            Invoke(nameof(ResetAccleration), 5f);
         }
     }
     void ResetAccleration()
