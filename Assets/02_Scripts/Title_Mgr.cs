@@ -51,9 +51,6 @@ public class Title_Mgr : MonoBehaviour
     {
         SceneManager.LoadScene("SampleScene");
     }
-
-
-    // Update is called once per frame
     void Update()
     {
         

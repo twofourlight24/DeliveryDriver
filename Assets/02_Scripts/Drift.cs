@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Drift : MonoBehaviour
 {
@@ -116,7 +115,7 @@ public class Drift : MonoBehaviour
             {
                 boosterCount++;
                 driftTimer = 0f; // 2초 넘으면 리셋 (다시 모으려면 새로)
-                Debug.Log($"🔥 부스터 충전! 현재: {boosterCount}");
+                Debug.Log($"부스터 충전! 현재: {boosterCount}");
                 GameMgr.Instance.UpdateBoosterUI(boosterCount); // UI 줄이기
             }
             GameMgr.Instance.UpdateDriftGauge(driftTimer);
@@ -171,7 +170,7 @@ public class Drift : MonoBehaviour
         {
             Gate.gameObject.SetActive(false);
             passGate = false;
-            Debug.Log("dd");
+            Debug.Log("ss");
         }
         else
         {
@@ -211,7 +210,6 @@ public class Drift : MonoBehaviour
         else
         {
             Debug.Log("측면 긁힘 → 속도 유지");
-            // 필요하면 여기서 가벼운 마찰만 주는 것도 가능
         }
     }
 

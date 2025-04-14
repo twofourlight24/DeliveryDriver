@@ -8,27 +8,31 @@ public class GameMgr : MonoBehaviour
 {
     public static GameMgr Instance; // 싱글톤
 
+    // UI 관련 변수
+    [Header("게임UI 변수")]
+    public Canvas gameplayUI;   // 게임 중 UI (랩, 타이머 등)
     public Text Lab_text;
     public Text Timer_text;
     public Text Best_text;
     public Image driftGaugeImage;
     public Image[] BoosterImage;
-    public Button ReStart_Btn;
-    public Button Exit_Btn;
     public AudioSource GameBgm;
 
-    public Canvas gameplayUI;   // 게임 중 UI (랩, 타이머 등)
+    [Header("게임오버 변수")]
+    // 게임 오버 변수
     public Canvas gameOverUI;   // 게임 오버 UI (총타임, 베스트타임 등)
+    public Button ReStart_Btn;
+    public Button Exit_Btn;
     public AudioSource GameOverBgm;
 
+    // 랩 관련 변수
+    [Header("LAB 변수")]
     private float startTime;
     private bool isRunning = false;
 
     private float LastLapTime = 0f; // 이전 랩 체크용
     private static float bestLapTime = Mathf.Infinity;
-
     public int LabCount = 1;
-    public Text wrongWayText;
 
     public Text GlovalTime_text;
     public Text GlovalBest_text;
@@ -37,17 +41,18 @@ public class GameMgr : MonoBehaviour
     private static float GlovalBestTime = Mathf.Infinity;
 
     // 카운트다운 관련 변수
+    [Header("카운트다운 변수")]
     public Text countdownText;
     public AudioSource CountDonwSound;
 
-    // 일시 정지 메뉴
+    // 일시 정지 메뉴 관련 변수
+    [Header("일시정지 변수")]
     public GameObject pauseMenuUI;
     public Button resumeBtn;
     public Button pauseRestartBtn;
     public Button exitToTitleBtn;
 
     private bool isPaused = false;
-
 
     public void UpdateDriftGauge(float time)
     {
@@ -84,7 +89,6 @@ public class GameMgr : MonoBehaviour
         pauseRestartBtn.onClick.AddListener(ReStart_Btn_Click);
         exitToTitleBtn.onClick.AddListener(Exit_Btn_Click);
     }
-
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -152,7 +156,6 @@ public class GameMgr : MonoBehaviour
             GameOver();
         }
     }
-
     public void UpdateBoosterUI(int count)
     {
         for (int i = 0; i < BoosterImage.Length; i++)
@@ -196,7 +199,6 @@ public class GameMgr : MonoBehaviour
         bestLapTime = Mathf.Infinity;
         LastLapTime = 0f;
         LabCount = 1;
-        // GlovalBestTime은 전체 게임 기록 저장용이라면 초기화 X (필요시만 초기화)
 
         Timer_text.text = "Time / 00:00.00";
         Best_text.text = "Best / 00:00.00";
@@ -215,7 +217,6 @@ public class GameMgr : MonoBehaviour
     {
         SceneManager.LoadScene("TitleScene");
     }
-
     IEnumerator CountdownRoutine()
     {
         Time.timeScale = 0f;
@@ -232,7 +233,6 @@ public class GameMgr : MonoBehaviour
             }
         }
         countdownText.gameObject.SetActive(false);
-
         Time.timeScale = 1f;
     }
     void PauseGame()
@@ -241,7 +241,6 @@ public class GameMgr : MonoBehaviour
         Time.timeScale = 0f;
         pauseMenuUI.SetActive(true);
     }
-
     void ResumeGame()
     {
         isPaused = false;
