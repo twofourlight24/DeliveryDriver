@@ -220,7 +220,7 @@ public class GameMgr : MonoBehaviour
     {
         Time.timeScale = 0f;
 
-        string[] countdown = { "Ready", "3", "2", "1", "Start!" };
+        string[] countdown = { "Ready", "3", "2", "1", " " };
         for (int i = 0; i < countdown.Length; i++)
         {
             yield return new WaitForSecondsRealtime(1f);

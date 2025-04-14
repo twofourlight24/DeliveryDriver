@@ -36371,7 +36371,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Start!
+  m_Text: ' '
 --- !u!222 &1124052097
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -97000,7 +97000,7 @@ AudioSource:
   m_audioClip: {fileID: 8300000, guid: f161cc5ba16dab044931fa250e7f9228, type: 3}
   m_Resource: {fileID: 8300000, guid: f161cc5ba16dab044931fa250e7f9228, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.541
   m_Pitch: 1
   Loop: 0
   Mute: 0
