@@ -15,9 +15,11 @@ public class GameMgr : MonoBehaviour
     public Image[] BoosterImage;
     public Button ReStart_Btn;
     public Button Exit_Btn;
+    public AudioSource GameBgm;
 
     public Canvas gameplayUI;   // 게임 중 UI (랩, 타이머 등)
     public Canvas gameOverUI;   // 게임 오버 UI (총타임, 베스트타임 등)
+    public AudioSource GameOverBgm;
 
     private float startTime;
     private bool isRunning = false;
@@ -37,6 +39,15 @@ public class GameMgr : MonoBehaviour
     // 카운트다운 관련 변수
     public Text countdownText;
     public AudioSource CountDonwSound;
+
+    // 일시 정지 메뉴
+    public GameObject pauseMenuUI;
+    public Button resumeBtn;
+    public Button pauseRestartBtn;
+    public Button exitToTitleBtn;
+
+    private bool isPaused = false;
+
 
     public void UpdateDriftGauge(float time)
     {
@@ -59,15 +70,31 @@ public class GameMgr : MonoBehaviour
         StartTimer();
         LastLapTime = Time.time - startTime;
 
+        GameBgm.Play();
+        if(GameOverBgm)
+            GameOverBgm.Stop();
+
         gameplayUI.gameObject.SetActive(true);
         gameOverUI.gameObject.SetActive(false);
 
         ReStart_Btn.onClick.AddListener(ReStart_Btn_Click);
         Exit_Btn.onClick.AddListener(Exit_Btn_Click);
+
+        resumeBtn.onClick.AddListener(ResumeGame);
+        pauseRestartBtn.onClick.AddListener(ReStart_Btn_Click);
+        exitToTitleBtn.onClick.AddListener(Exit_Btn_Click);
     }
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (!isPaused)
+                PauseGame();
+            else
+                ResumeGame();
+        }
+
         if (isRunning)
         {
             float currentTime = Time.time - startTime;
@@ -80,6 +107,7 @@ public class GameMgr : MonoBehaviour
     public void StartTimer()
     {
         startTime = Time.time;
+        LastLapTime = Time.time; // 첫 랩 기준 시점 세팅
         isRunning = true;
     }
 
@@ -100,8 +128,8 @@ public class GameMgr : MonoBehaviour
 
         if (LabCount == 2 && bestLapTime == Mathf.Infinity)
         {
-            float lapTime = Time.time - LastLapTime;
-            LastLapTime = Time.time;
+            float lapTime = (Time.time - startTime) - LastLapTime;
+            LastLapTime += lapTime;
 
             if (lapTime < bestLapTime)
             {
@@ -157,6 +185,11 @@ public class GameMgr : MonoBehaviour
         GlovalTime_text.text = string.Format("Record / {0:00}:{1:00}.{2:00}", gMin, gSec, gMs);
         GlovalBest_text.text = string.Format("BestRecord / {0:00}:{1:00}.{2:00}", bgMin, bgSec, bgMs);
         Time.timeScale = 0.0f;
+
+        GameOverBgm.Play();
+        if (GameBgm)
+            GameBgm.Stop();
+
     }
     public void ResetGameState()
     {
@@ -190,21 +223,29 @@ public class GameMgr : MonoBehaviour
         string[] countdown = { "Ready", "3", "2", "1", "Start!" };
         for (int i = 0; i < countdown.Length; i++)
         {
+            yield return new WaitForSecondsRealtime(1f);
             countdownText.text = countdown[i];
             countdownText.gameObject.SetActive(true);
             if (i == 1)
             {
                 CountDonwSound.Play();
             }
-            yield return new WaitForSecondsRealtime(1f);
         }
-
-
-
         countdownText.gameObject.SetActive(false);
 
         Time.timeScale = 1f;
+    }
+    void PauseGame()
+    {
+        isPaused = true;
+        Time.timeScale = 0f;
+        pauseMenuUI.SetActive(true);
+    }
 
-
+    void ResumeGame()
+    {
+        isPaused = false;
+        Time.timeScale = 1f;
+        pauseMenuUI.SetActive(false);
     }
 }
